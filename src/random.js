@@ -56,6 +56,7 @@ function getRandomDataset(x, indx, low, high) {
         borderColor: color,
         data: getDatapoints(x, low, high),
         fill: false,
+        lineTension: 0
     };
 
     return dataset;

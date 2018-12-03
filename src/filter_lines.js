@@ -7,6 +7,10 @@ class FilterLineCharts {
      * the function assumes all datasets will have the same labels
      * and thus picks the first one
      *
+    if (currDatasets.length < 1) {
+    return;
+    }
+
      **/
     static getLabels (datasets) {
         const anyDataset = datasets[0];
@@ -21,13 +25,44 @@ class FilterLineCharts {
         return labels;
     }
 
+    static filterGestureType(matchingPoints) {
+        // if we need to match all slopes, just return
+        const matchAll = document.getElementById('js-gestureAll');
+        if (matchAll.checked) {
+            return matchingPoints;
+        }
+
+        // we need to remove all x axis points except start and finish
+        // get all x values
+        const xKeys = matchingPoints.x;
+        const pointsLength = xKeys.length;
+
+        // if max no. of points is 2, just return
+        if (pointsLength < 3) {
+            return matchingPoints;
+        }
+
+        const yKeys = matchingPoints.y;
+
+        // create a new dictionary to return
+        const filteredMatchingPoints = {
+            x: [], y: []
+        };
+
+        // get only first and last x point
+        filteredMatchingPoints.x = [xKeys[0], xKeys[pointsLength - 1]];
+        filteredMatchingPoints.y = [yKeys[0], yKeys[pointsLength - 1]];
+
+        return filteredMatchingPoints;
+    }
+
     /*
      * given a list of x and y points
      * the function returns a dictionary of xy points
      * from xrange, yrange as close to xpoints, ypoints as possible
      *
      **/
-    static get_matching_xy (chart, xpoints, ypoints) {
+    static getMatchingXY (chart, xpoints, ypoints) {
         // get total chart widht to get x scale width
         const chartArea = chart.chartArea;
         const chartWidth = chartArea.right - chartArea.left;
@@ -127,7 +162,7 @@ class FilterLineCharts {
         // get internal data
         const data = dataset.data;
 
-        const threshold = 20;
+        const threshold = 30;
         for (let i = 0; i < matchingPoints.x.length - 1; ++i) {
             // get required x values to get y data from dataset
             const x1 = matchingPoints.x[i];
@@ -163,7 +198,8 @@ class FilterLineCharts {
         this.chart = null;
 
         // get random datasets originally and save for reset
-        this.origDatasets = getRandomDatasets(10, -100, 100, 50);
+        this.origDatasets = getRandomDatasets(10, -100, 100, 10);
+
         // we'll always draw current datasets
         this.currDatasets = this.origDatasets;
 
@@ -175,7 +211,7 @@ class FilterLineCharts {
 
         // color and width of gesture stroke
         this.color = "black";
-        this.strokeWidth = 2;
+        this.strokeWidth = 6;
 
         // bind functions
         this.resetPointsArray = this.resetPointsArray.bind(this);
@@ -195,6 +231,11 @@ class FilterLineCharts {
     }
 
     drawChart () {
+        // dont' do anything for no datasets
+        if (this.currDatasets.length < 1) {
+            return;
+        }
+
         // get labels from within the dataset
         const labels = FilterLineCharts.getLabels(this.currDatasets);
 
@@ -243,8 +284,11 @@ class FilterLineCharts {
      **/
     filterLines () {
         // get similar xpoints in the actual xrange
-        const matchingPoints = FilterLineCharts.get_matching_xy(this.chart,
+        let matchingPoints = FilterLineCharts.getMatchingXY(this.chart,
             this.xpoints, this.ypoints);
+
+        // remove matching points according to gesture type selected
+        matchingPoints = FilterLineCharts.filterGestureType(matchingPoints);
 
         // get datasets;
         const datasets = this.currDatasets;
