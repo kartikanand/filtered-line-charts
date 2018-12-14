@@ -160,7 +160,7 @@ class FilterLineCharts {
         // get internal data
         const data = dataset.data;
 
-        const threshold = yscale/xscale + 5;
+        const threshold = yscale/xscale + 10;
         for (let i = 0; i < matchingPoints.x.length - 1; ++i) {
             // get required x values to get y data from dataset
             const x1 = matchingPoints.x[i];
