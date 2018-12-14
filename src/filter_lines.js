@@ -7,10 +7,6 @@ class FilterLineCharts {
      * the function assumes all datasets will have the same labels
      * and thus picks the first one
      *
-    if (currDatasets.length < 1) {
-    return;
-    }
-
      **/
     static getLabels (datasets) {
         const anyDataset = datasets[0];
@@ -63,7 +59,7 @@ class FilterLineCharts {
      *
      **/
     static getMatchingXY (chart, xpoints, ypoints) {
-        // get total chart widht to get x scale width
+        // get total chart width to get x scale width
         const chartArea = chart.chartArea;
         const chartWidth = chartArea.right - chartArea.left;
 
@@ -77,25 +73,27 @@ class FilterLineCharts {
         // get starting x point
         const startx = chartArea.left;
 
-        // create a set to avoid duplicates
-        const matchingSet = new Set();
-
         const matchingPoints = {
             x: [],
             y: []
         };
 
         // use the middle of two x-ticks as the threshold
-        const threshold = xscale/10;
-        for (let k = 0; k < xpoints.length; ++k) {
-            const xpoint = xpoints[k];
-            const ypoint = ypoints[k];
-            for (let i = 0; i < ticks; ++i) {
-                const x = startx + xscale*i;
+        const threshold = xscale/3;
+        for (let i = 0; i < ticks; ++i) {
+            const x = startx + xscale*i;
+            let minDist = xscale;
+            for (let k = 0; k < xpoints.length; ++k) {
+                const xpoint = xpoints[k];
                 const diff = Math.abs(xpoint - x);
-                if (diff <= threshold && !matchingSet.has(i)) {
-                    matchingSet.add(i);
+                if (diff >= threshold) {
+                    continue;
+                }
 
+                if (diff < minDist) {
+                    minDist = diff;
+                } else {
+                    const ypoint = ypoints[k];
                     const y = FilterLineCharts.scale_y(chart, ypoint);
 
                     // add x, y to matching points dict
@@ -198,7 +196,7 @@ class FilterLineCharts {
         this.chart = null;
 
         // get random datasets originally and save for reset
-        this.origDatasets = getRandomDatasets(10, -100, 100, 10);
+        this.origDatasets = getRandomDatasets(10, -100, 100, 20);
 
         // we'll always draw current datasets
         this.currDatasets = this.origDatasets;
