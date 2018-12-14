@@ -151,7 +151,7 @@ class FilterLineCharts {
      * match the passed dataset according to matching points and slope data
      *
      **/
-    static matchSlope (dataset, matchingPoints) {
+    static matchSlope (dataset, matchingPoints, xscale, yscale) {
         // if not enough points, do anything
         if (matchingPoints.x.length < 2) {
             return true;
@@ -160,7 +160,7 @@ class FilterLineCharts {
         // get internal data
         const data = dataset.data;
 
-        const threshold = 30;
+        const threshold = yscale/xscale + 5;
         for (let i = 0; i < matchingPoints.x.length - 1; ++i) {
             // get required x values to get y data from dataset
             const x1 = matchingPoints.x[i];
@@ -228,6 +228,37 @@ class FilterLineCharts {
         this.drawChart();
     }
 
+    getxScale() {
+        // get total chart width to get x scale width
+        const chartArea = this.chart.chartArea;
+        const chartWidth = chartArea.right - chartArea.left;
+
+        // get number of ticks
+        const scales = this.chart.scales['x-axis-0'];
+        const ticks = scales.ticks.length;
+
+        // total width divided by ticks
+        const xscale = chartWidth/(ticks-1);
+
+        return xscale;
+    }
+
+    getyScale() {
+        // get number of ticks
+        const scales = this.chart.scales['y-axis-0'];
+        const ticks = scales.ticks;
+        const tickLength = ticks.length;
+
+        // get total chart area to get y scale width
+        const chartArea = this.chart.chartArea;
+
+        // total width divided by ticks
+        const chartHeight = chartArea.bottom - chartArea.top;
+        const yscale = chartHeight/(tickLength-1);
+
+        return yscale;
+    }
+
     drawChart () {
         // dont' do anything for no datasets
         if (this.currDatasets.length < 1) {
@@ -293,7 +324,7 @@ class FilterLineCharts {
 
         const filteredDatasets = [];
         for (const dataset of datasets) {
-            if (FilterLineCharts.matchSlope(dataset, matchingPoints)) {
+            if (FilterLineCharts.matchSlope(dataset, matchingPoints, this.getxScale(), this.getyScale())) {
                 filteredDatasets.push(dataset);
             }
         }
